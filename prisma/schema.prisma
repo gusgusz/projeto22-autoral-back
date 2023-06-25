@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  email     String   @unique
+  image     String
+  password  String
+  createdAt DateTime @default(now())
+
+  assessments Assessment[]
+  analysts    Analyst[]
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  cpf       String   @unique
+  email     String   @unique
+  image     String?
+  isAdmin   Boolean  @default(false)
+  password  String
+  createdAt DateTime @default(now())
+
+  assessments Assessment[]
+  sessions   Session[]
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [userId], references: [id])
+}
+
+model Assessment {
+  id          Int      @id @default(autoincrement())
+  analystId   Int
+  clientId    Int
+  situation   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  analyst  Analyst @relation(fields: [analystId], references: [id])
+  client   Client  @relation(fields: [clientId], references: [id])
+  products Product[]
+  admin    Admin?  @relation(fields: [adminId], references: [id])
+  adminId  Int?
+}
+
+model Analyst {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  email     String   @unique
+  image     String
+  password  String
+  createdAt DateTime @default(now())
+  adminId   Int
+
+  admin      Admin   @relation(fields: [adminId], references: [id])
+  assessments Assessment[]
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  productTypeId  Int
+  assessmentsId  Int
+  value          Float    @default(0.00)
+  createdAt      DateTime @default(now())
+
+  productType  ProductType @relation(fields: [productTypeId], references: [id])
+  assessments  Assessment  @relation(fields: [assessmentsId], references: [id])
+}
+
+model ProductType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  image     String
+
+  products   Product[]
+}
